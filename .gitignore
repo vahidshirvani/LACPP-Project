@@ -6,7 +6,7 @@
 
 # eclipse specific git ignore
 *.pydevproject
-.project
+MM_MapReduce/.project
 .metadata
 .recommenders
 bin/**
