@@ -38,7 +38,8 @@ public class Matrix {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
+		this.transpose();
 		
 	}
 	
@@ -50,6 +51,15 @@ public class Matrix {
 		return rowMatrix[row];
 	}
 	
+	private void transpose() {
+		
+		for(int i = 0;i<rows;i++){
+			for (int j = 0;j<columns;j++) {
+				columnMatrix[j][i] = rowMatrix[i][j];
+			}
+		}
+		
+	}
 	void printMatrix() {
 		for(int i = 0;i<rows;i++){
 			for(int j = 0;j<columns;j++) {
