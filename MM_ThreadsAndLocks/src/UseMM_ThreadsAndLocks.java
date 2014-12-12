@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 
 public class UseMM_ThreadsAndLocks {
 	
@@ -15,7 +13,7 @@ public class UseMM_ThreadsAndLocks {
 		StringBuilder sb = new StringBuilder();
 		for(int[] row: matrix) {
 			for(int i: row) {
-				sb.append(String.format("%02d", i));
+				sb.append(String.format("%04d", i));
 				sb.append(" ");
 			}
 			sb.append(System.getProperty("line.separator"));
@@ -38,16 +36,19 @@ public class UseMM_ThreadsAndLocks {
 		for(int i = 0; i < numOfRows; i++)
 			for(int j = 0; j <numOfColumns; j++)
 				for(int k = 0; k < rowLengthOfA; k++)
-					c[i][j] = a[i][k] * b[k][j];
+					c[i][j] = c[i][j] + a[i][k] * b[k][j];
 		return c;
 	}
 	
 	public static void main(String[] args) {
 		
-//		int[][] a = 
-//		int[][] c = SequentialMultiply(a, b);
-		int[][] a = generateMatrix(5, 5);
+		int[][] a = generateMatrix(3, 2); 
+		int[][] b = generateMatrix(2, 2); 
+		int[][] c = SequentialMultiply(a, b);
+		
 		System.out.println(matrixToString(a));
+		System.out.println(matrixToString(b));
+		System.out.println(matrixToString(c));
 	}
 
 }
