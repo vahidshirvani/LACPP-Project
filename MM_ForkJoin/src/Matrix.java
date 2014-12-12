@@ -17,18 +17,19 @@ public class Matrix {
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(filename));
 			int i = 0;
-			int j = 0;
-			int n;
+			
+			String line = in.readLine();
+			
+			String [] strArr = line.split(" ");
             while (i < rows) {
-                while (j < columns)  {
-                    n = in.read() - 48;
-                       //System.out.println(i);
-                        this.rowMatrix[i][j] = n;
-                    j++;
-                   }
-                n = in.read();
-                i++;
-                j = 0;
+            	for(int j= 0;j<strArr.length;j++) {
+            		rowMatrix[i][j] = Integer.parseInt(strArr[j]);	
+            	}
+            	line = in.readLine();
+        		if(line != null) {
+        			strArr = line.split(" ");
+        		}
+            	i++;
             }
             in.close();
 		} catch (FileNotFoundException e) {
@@ -37,14 +38,32 @@ public class Matrix {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
+		this.transpose();
 		
 	}
 	
+	int [] getColumn(int col) {
+		return columnMatrix[col];
+	}
+	
+	int [] getRow(int row) {
+		return rowMatrix[row];
+	}
+	
+	private void transpose() {
+		
+		for(int i = 0;i<rows;i++){
+			for (int j = 0;j<columns;j++) {
+				columnMatrix[j][i] = rowMatrix[i][j];
+			}
+		}
+		
+	}
 	void printMatrix() {
 		for(int i = 0;i<rows;i++){
 			for(int j = 0;j<columns;j++) {
-				System.out.print(rowMatrix[i][j]);
+				System.out.print(rowMatrix[i][j]+" ");
 			}
 			System.out.println();
 		}
