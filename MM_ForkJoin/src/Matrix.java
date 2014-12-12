@@ -9,6 +9,19 @@ public class Matrix {
 	int [][] columnMatrix;
 	int rows;
 	int columns;
+	
+	public Matrix(int rows, int columns){
+		this.rows = rows; 
+		this.columns = columns;
+		this.rowMatrix = new int[rows][columns];
+		this.columnMatrix = new int[columns][rows];
+		/*for(int i =0;i<rows;i++){
+			for(int j = 0;j<columns;j++) {
+				rowMatrix[i][j] = 0;
+				columnMatrix[i][j]=0;
+			}
+		}*/
+	}
 	public Matrix(int rows,int columns,String filename) {
 		this.rowMatrix = new int[rows][columns];
 		this.columnMatrix = new int[columns][rows];
@@ -43,6 +56,11 @@ public class Matrix {
 		
 	}
 	
+	void addElement(int i,int j,int val){
+		this.rowMatrix[i][j] = val;
+		this.rowMatrix[j][i] = val;
+	}
+	
 	int [] getColumn(int col) {
 		return columnMatrix[col];
 	}
@@ -59,6 +77,14 @@ public class Matrix {
 			}
 		}
 		
+	}
+	void printCMatrix() {
+		for(int i = 0;i<columns;i++){
+			for(int j = 0;j<rows;j++) {
+				System.out.print(columnMatrix[i][j]+" ");
+			}
+			System.out.println();
+		}
 	}
 	void printMatrix() {
 		for(int i = 0;i<rows;i++){
