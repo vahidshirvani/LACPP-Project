@@ -58,7 +58,7 @@ public class Matrix {
 	
 	void addElement(int i,int j,int val){
 		this.rowMatrix[i][j] = val;
-		this.rowMatrix[j][i] = val;
+		this.columnMatrix[j][i] = val;
 	}
 	
 	int [] getColumn(int col) {
