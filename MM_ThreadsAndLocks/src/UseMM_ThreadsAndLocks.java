@@ -20,8 +20,22 @@ public class UseMM_ThreadsAndLocks {
 		return c;
 	}
 	
+	public static int[][] sequentialMultiply2(int[][] a, int[][] b) {
+		MatrixUtility.sanityCheck1(a, b);
+		int numOfRowsInA = a.length;
+		int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
+		int rowLengthOfA = a[0].length;
+		int rowLengthOfB = b[0].length;
+		
+		for(int i = 0; i < numOfRowsInA; i++)						
+			for(int j = 0; j < rowLengthOfA; j++)
+				for(int k = 0; k < rowLengthOfB; k++)
+					c[i][k] = c[i][k] + a[i][j] * b[j][k];
+		return c;
+	}
 	// sequential but fast because of cache hits 
-	public static int[][] sequentialMultiply2(int[][] a, int[][] b, int blockSize) {
+	public static int[][] sequentialMultiply3(int[][] a, int[][] b, int blockSize) {
 		MatrixUtility.sanityCheck1(a, b);
 		MatrixUtility.sanityCheck2(a, b, blockSize);
 		
@@ -190,15 +204,17 @@ public class UseMM_ThreadsAndLocks {
 		int[][] a = MatrixUtility.generateMatrix(100, 128); 
 		int[][] b = MatrixUtility.generateMatrix(128, 512); 
 		int[][] c1 = sequentialMultiply1(a, b);
-		int[][] c2 = sequentialMultiply2(a, b, 16);
-		int[][] c3 = parallelMultiply1(a, b, 4, 4);
-		int[][] c4 = parallelMultiply2(a, b, 4, 4);
-		int[][] c5 = parallelMultiply3(a, b, 4, 4, 16);
+		int[][] c2 = sequentialMultiply2(a, b);
+		int[][] c3 = sequentialMultiply3(a, b, 16);
+		int[][] c4 = parallelMultiply1(a, b, 4, 4);
+		int[][] c5 = parallelMultiply2(a, b, 4, 4);
+		int[][] c6 = parallelMultiply3(a, b, 4, 4, 16);
 		
 		System.out.println(MatrixUtility.matrixEqual(c1, c2));
 		System.out.println(MatrixUtility.matrixEqual(c1, c3));
 		System.out.println(MatrixUtility.matrixEqual(c1, c4));
 		System.out.println(MatrixUtility.matrixEqual(c1, c5));
+		System.out.println(MatrixUtility.matrixEqual(c1, c6));
 //		System.out.println(MatrixUtility.matrixToString(a));
 //		System.out.println(MatrixUtility.matrixToString(b));
 //		System.out.println(MatrixUtility.matrixToString(c1));

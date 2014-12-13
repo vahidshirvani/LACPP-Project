@@ -23,6 +23,8 @@ public class MatrixUtility {
 		return sb.toString();
 	}
 	
+	// checks if two matrices can be multiplied. number of columns in A 
+	// must be equal to number of rows in B
 	public static boolean sanityCheck1(int[][] a, int[][] b) {
 		boolean isValid = true;
 		int rowLengthOfA = a[0].length;
@@ -34,6 +36,8 @@ public class MatrixUtility {
 		return isValid;
 	}
 	
+	// checks the matrix can be divided into smaller grids
+	// the number of columns in A and B must be divisible by block size
 	public static boolean sanityCheck2(int[][] a, int[][] b, int blockSize) {
 		boolean isValid = true;
 		int rowLengthOfA = a[0].length;
@@ -45,6 +49,8 @@ public class MatrixUtility {
 		return isValid;
 	}
 	
+	// checks if the matrix can be divided into several work units
+	// the number of rows in matrix A must be divisible by number of work
 	public static boolean sanityCheck3(int[][] a, int numOfWorks) {
 		boolean isValid = true;
 		int numOfRowsInA = a.length;
