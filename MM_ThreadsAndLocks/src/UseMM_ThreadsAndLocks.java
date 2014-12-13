@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -258,28 +259,61 @@ public class UseMM_ThreadsAndLocks {
 	
 	public static void main(String[] args) {
 		
-		int[][] a = MatrixUtility.generateMatrix(100, 128); 
-		int[][] b = MatrixUtility.generateMatrix(128, 512); 
+		int algotithm = Integer.parseInt(args[0]);
+		int numOfThreads = Integer.parseInt(args[1]);
+		int numOfWorks = Integer.parseInt(args[2]);
+		int blockSize = Integer.parseInt(args[3]);
 		
-		int[][] c10 = sequentialMultiply10(a, b);
-		int[][] c11 = parallelMultiply11(a, b, 4, 4);
-		int[][] c12 = parallelMultiply12(a, b, 4, 4);		
-		System.out.println(MatrixUtility.matrixEqual(c10, c11));
-		System.out.println(MatrixUtility.matrixEqual(c10, c12));
+		int numOfIterations = 10;
+		long[] time = new long[numOfIterations];		
+		for(int i = 0; i < numOfIterations; i++) {
+			int[][] a = MatrixUtility.generateMatrix(512, 256); 
+			int[][] b = MatrixUtility.generateMatrix(256, 512); 
+			int[][] c;
+			
+			long start = System.currentTimeMillis();
+			switch(algotithm) {
+				case 10:			
+					c = sequentialMultiply10(a, b);
+					break;
+				case 11:				
+					c = parallelMultiply11(a, b, numOfThreads, numOfWorks);
+					break;
+				case 12:					
+					c = parallelMultiply12(a, b, numOfThreads, numOfWorks);
+					break;
+				case 20:					
+					c = sequentialMultiply20(a, b);
+					break;
+				case 21:
+					c = parallelMultiply21(a, b, numOfThreads, numOfWorks);
+					break;
+				case 30:				
+					c = sequentialMultiply30(a, b, blockSize);
+					break;
+				case 31:
+					c = parallelMultiply31(a, b, numOfThreads, numOfWorks, blockSize);
+					break;
+				default:
+					System.out.println("chose one of these 10, 11, 12, 20, 21, 30, 31");
+					break;
+			}
+			long end = System.currentTimeMillis();
+			long delta = end - start;
+			time[i] = delta;
+//			int[][] c10 = sequentialMultiply10(a, b);
+//			System.out.println(MatrixUtility.matrixEqual(c10, c));			
+//			System.out.println(MatrixUtility.matrixToString(a));
+//			System.out.println(MatrixUtility.matrixToString(b));
+//			System.out.println(MatrixUtility.matrixToString(c));
+		}
 		
-		int[][] c20 = sequentialMultiply20(a, b);
-		int[][] c21 = parallelMultiply21(a, b, 4, 4);
-		System.out.println(MatrixUtility.matrixEqual(c10, c20));
-		System.out.println(MatrixUtility.matrixEqual(c10, c21));
-		
-		int[][] c30 = sequentialMultiply30(a, b, 16);		
-		int[][] c31 = parallelMultiply31(a, b, 4, 4, 16);
-		System.out.println(MatrixUtility.matrixEqual(c10, c30));
-		System.out.println(MatrixUtility.matrixEqual(c10, c31));
-		
-//		System.out.println(MatrixUtility.matrixToString(a));
-//		System.out.println(MatrixUtility.matrixToString(b));
-//		System.out.println(MatrixUtility.matrixToString(c1));
+		Arrays.sort(time);
+		long sum = 0L;
+		for(int i = 1; i < numOfIterations - 1; i++)
+			sum += time[i];
+		double average = ((double)sum)/((double)(numOfIterations-2));
+		System.out.println("average time was: " + average + "ms");
 	}
 
 }

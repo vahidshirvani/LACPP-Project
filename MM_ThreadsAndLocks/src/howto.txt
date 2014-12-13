@@ -1,0 +1,12 @@
+to compile
+
+    make
+    
+to clean binaries
+
+    make clean
+    
+to run
+
+    java UseMM_ThreadsAndLocks 20 4 4 16
+    
