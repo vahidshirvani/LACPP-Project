@@ -23,12 +23,23 @@ public class MatrixUtility {
 		return sb.toString();
 	}
 	
-	public static boolean sanityCheck(int[][] a, int[][] b) {
+	public static boolean sanityCheck1(int[][] a, int[][] b) {
 		boolean isValid = true;
 		int rowLengthOfA = a[0].length;
 		int columnLengthOfB = b.length;
 		if(rowLengthOfA != columnLengthOfB) {
 			System.out.println("two matrices can not be multiplied");
+			System.exit(1);
+		}
+		return isValid;
+	}
+	
+	public static boolean sanityCheck2(int[][] a, int[][] b, int blockSize) {
+		boolean isValid = true;
+		int rowLengthOfA = a[0].length;
+		int rowLengthOfB = b[0].length;
+		if((rowLengthOfA % blockSize != 0) || (rowLengthOfB % blockSize != 0)) {
+			System.out.println("can not fit blocks inside matrices");
 			System.exit(1);
 		}
 		return isValid;
