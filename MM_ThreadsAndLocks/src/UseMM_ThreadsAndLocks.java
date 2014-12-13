@@ -21,45 +21,8 @@ public class UseMM_ThreadsAndLocks {
 					c[i][j] = c[i][j] + a[i][k] * b[k][j];
 		return c;
 	}
-	
-	public static int[][] sequentialMultiply20(int[][] a, int[][] b) {
-		MatrixUtility.sanityCheck1(a, b);
-		int numOfRowsInA = a.length;
-		int numOfColumnsInB = b[0].length;
-		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
-		int rowLengthOfA = a[0].length;
-		int rowLengthOfB = b[0].length;
-		
-		for(int i = 0; i < numOfRowsInA; i++)						
-			for(int j = 0; j < rowLengthOfA; j++)
-				for(int k = 0; k < rowLengthOfB; k++)
-					c[i][k] = c[i][k] + a[i][j] * b[j][k];
-		return c;
-	}
-	// sequential but fast because of cache hits 
-	public static int[][] sequentialMultiply30(int[][] a, int[][] b, int blockSize) {
-		MatrixUtility.sanityCheck1(a, b);
-		MatrixUtility.sanityCheck2(a, b, blockSize);
-		
-		int numOfRowsInA = a.length;
-		int numOfColumnsInB = b[0].length;
-		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
-		int rowLengthOfA = a[0].length;
-		int rowLengthOfB = b[0].length;
-		
-		for(int jj = 0; jj < rowLengthOfB; jj = jj+blockSize)
-			for (int kk = 0; kk < rowLengthOfA; kk = kk+blockSize)
-				for (int i = 0; i < numOfRowsInA; i = i+1)
-					for (int j = jj; j < Math.min(jj+blockSize,rowLengthOfB); j = j+1) {
-						int r = 0;
-						for (int k = kk; k < Math.min(kk+blockSize,rowLengthOfA); k = k+1)
-							r = r + a[i][k]*b[k][j];
-						c[i][j] = c[i][j] + r;
-					}
-		return c;
-	}
-	
-	// one element in C is a dot product between row in A with column in B
+    
+    // one element in C is a dot product between row in A with column in B
 	// we get cache misses when we traverse B vertically
 	public static int[][] parallelMultiply11(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
 		MatrixUtility.sanityCheck1(a, b);
@@ -103,8 +66,8 @@ public class UseMM_ThreadsAndLocks {
         }
 		return c;
 	}
-	
-	// one element in C is a dot product between row in A with column in B
+    
+    // one element in C is a dot product between row in A with column in B
 	// we get cache misses when we traverse B vertically
 	public static int[][] parallelMultiply12(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
 		MatrixUtility.sanityCheck1(a, b);
@@ -159,7 +122,22 @@ public class UseMM_ThreadsAndLocks {
         		ret[i][j] = c[i][j].get();        	
 		return ret;
 	}
-
+	
+	public static int[][] sequentialMultiply20(int[][] a, int[][] b) {
+		MatrixUtility.sanityCheck1(a, b);
+		int numOfRowsInA = a.length;
+		int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
+		int rowLengthOfA = a[0].length;
+		int rowLengthOfB = b[0].length;
+		
+		for(int i = 0; i < numOfRowsInA; i++)						
+			for(int j = 0; j < rowLengthOfA; j++)
+				for(int k = 0; k < rowLengthOfB; k++)
+					c[i][k] = c[i][k] + a[i][j] * b[j][k];
+		return c;
+	}
+    
 	// we get don't get cache misses because we traverse B horizontally
 	// we can traverse like that because we are multiplying one element 
 	// in A with a whole row in B before continuing to the next row in B
@@ -203,6 +181,29 @@ public class UseMM_ThreadsAndLocks {
         executor.shutdown();
         while (!executor.isTerminated()) {
         }
+		return c;
+	}
+    
+	// sequential but fast because of cache hits 
+	public static int[][] sequentialMultiply30(int[][] a, int[][] b, int blockSize) {
+		MatrixUtility.sanityCheck1(a, b);
+		MatrixUtility.sanityCheck2(a, b, blockSize);
+		
+		int numOfRowsInA = a.length;
+		int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
+		int rowLengthOfA = a[0].length;
+		int rowLengthOfB = b[0].length;
+		
+		for(int jj = 0; jj < rowLengthOfB; jj = jj+blockSize)
+			for (int kk = 0; kk < rowLengthOfA; kk = kk+blockSize)
+				for (int i = 0; i < numOfRowsInA; i = i+1)
+					for (int j = jj; j < Math.min(jj+blockSize,rowLengthOfB); j = j+1) {
+						int r = 0;
+						for (int k = kk; k < Math.min(kk+blockSize,rowLengthOfA); k = k+1)
+							r = r + a[i][k]*b[k][j];
+						c[i][j] = c[i][j] + r;
+					}
 		return c;
 	}
 
@@ -267,8 +268,8 @@ public class UseMM_ThreadsAndLocks {
 		int numOfIterations = 10;
 		long[] time = new long[numOfIterations];		
 		for(int i = 0; i < numOfIterations; i++) {
-			int[][] a = MatrixUtility.generateMatrix(512, 256); 
-			int[][] b = MatrixUtility.generateMatrix(256, 512); 
+			int[][] a = MatrixUtility.generateMatrix(128, 2048); 
+			int[][] b = MatrixUtility.generateMatrix(2048, 8192); 
 			int[][] c;
 			
 			long start = System.currentTimeMillis();

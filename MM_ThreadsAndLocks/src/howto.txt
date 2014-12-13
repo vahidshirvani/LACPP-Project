@@ -7,6 +7,19 @@ to clean binaries
     make clean
     
 to run
+    
+    java UseMM_ThreadsAndLocks a t w b. 
+
+Where 
+    a is the algorithm, (10, 11, 12, 20, 21, 30, 31)
+    t is number of threads (pool size), 
+    w is number work units and 
+    b is block size. 
+    
+for example 
 
     java UseMM_ThreadsAndLocks 20 4 4 16
+    
+
+    
     
