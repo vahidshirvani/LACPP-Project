@@ -61,6 +61,18 @@ public class MatrixUtility {
 		return isValid;
 	}
 	
+	// checks if the matrix can be divided into several work units
+	// the number of rows in matrix A must be divisible by number of work
+	public static boolean sanityCheck4(int[][] a, int numOfWorks) {
+		boolean isValid = true;
+		int numOfColumnsInA = a[0].length;
+		if((numOfColumnsInA % numOfWorks) != 0) {
+			System.out.println("could not divide into work");
+			System.exit(1);
+		}
+		return isValid;
+	}
+	
 	public static boolean matrixEqual(int[][] a, int[][] b) {
 		boolean isEqual = true;
 		int numOfRowsInA = a.length; 

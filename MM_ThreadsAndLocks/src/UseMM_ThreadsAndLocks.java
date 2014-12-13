@@ -1,26 +1,27 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class UseMM_ThreadsAndLocks {
 		
 	// It's simple to understand, it's mainly used for verification purposes 
-	public static int[][] sequentialMultiply1(int[][] a, int[][] b) {
+	public static int[][] sequentialMultiply10(int[][] a, int[][] b) {
 		MatrixUtility.sanityCheck1(a, b);
 		
-		int numOfRows = a.length;
-		int numOfColumns = b[0].length;
-		int[][] c = new int[numOfRows][numOfColumns];
+		int numOfRowsInA = a.length;
+		int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
 		int rowLengthOfA = a[0].length;
 		
-		for(int i = 0; i < numOfRows; i++)
-			for(int j = 0; j <numOfColumns; j++)
+		for(int i = 0; i < numOfRowsInA; i++)
+			for(int j = 0; j < numOfColumnsInB; j++)
 				for(int k = 0; k < rowLengthOfA; k++)
 					c[i][j] = c[i][j] + a[i][k] * b[k][j];
 		return c;
 	}
 	
-	public static int[][] sequentialMultiply2(int[][] a, int[][] b) {
+	public static int[][] sequentialMultiply20(int[][] a, int[][] b) {
 		MatrixUtility.sanityCheck1(a, b);
 		int numOfRowsInA = a.length;
 		int numOfColumnsInB = b[0].length;
@@ -35,7 +36,7 @@ public class UseMM_ThreadsAndLocks {
 		return c;
 	}
 	// sequential but fast because of cache hits 
-	public static int[][] sequentialMultiply3(int[][] a, int[][] b, int blockSize) {
+	public static int[][] sequentialMultiply30(int[][] a, int[][] b, int blockSize) {
 		MatrixUtility.sanityCheck1(a, b);
 		MatrixUtility.sanityCheck2(a, b, blockSize);
 		
@@ -59,12 +60,12 @@ public class UseMM_ThreadsAndLocks {
 	
 	// one element in C is a dot product between row in A with column in B
 	// we get cache misses when we traverse B vertically
-	public static int[][] parallelMultiply1(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
+	public static int[][] parallelMultiply11(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
 		MatrixUtility.sanityCheck1(a, b);
 		MatrixUtility.sanityCheck3(a, numOfWorks);
-		final int numOfRows = a.length;
-		final int numOfColumns = b[0].length;
-		int[][] c = new int[numOfRows][numOfColumns];
+		final int numOfRowsInA = a.length;
+		final int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
 		final int rowLengthOfA = a[0].length;
 		class Work implements Runnable {
 			int[] rows;
@@ -80,7 +81,7 @@ public class UseMM_ThreadsAndLocks {
 			@Override
 			public void run() {	
 				for(int i: rows)
-					for(int j = 0; j <numOfColumns; j++)
+					for(int j = 0; j < numOfColumnsInB; j++)
 						for(int k = 0; k < rowLengthOfA; k++)
 							c[i][j] = c[i][j] + a[i][k] * b[k][j];
 			}	
@@ -88,7 +89,7 @@ public class UseMM_ThreadsAndLocks {
 		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
         Work[] works = new Work[numOfWorks];
 		for (int i = 0; i < numOfWorks; i++) {
-			int workSize = numOfRows/numOfWorks;
+			int workSize = numOfRowsInA/numOfWorks;
 			int[] rows = new int[workSize];
 			for(int j = 0; j < workSize; j++)
 				rows[j] = i*workSize + j;
@@ -102,15 +103,71 @@ public class UseMM_ThreadsAndLocks {
 		return c;
 	}
 	
+	// one element in C is a dot product between row in A with column in B
+	// we get cache misses when we traverse B vertically
+	public static int[][] parallelMultiply12(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
+		MatrixUtility.sanityCheck1(a, b);
+		MatrixUtility.sanityCheck4(a, numOfWorks);
+		final int numOfRowsInA = a.length;
+		final int numOfColumnsInB = b[0].length;
+		AtomicInteger[][] c = new AtomicInteger[numOfRowsInA][numOfColumnsInB];
+        for(int i = 0; i < numOfRowsInA; i++)
+        	for(int j = 0; j < numOfColumnsInB; j++)
+        		c[i][j] = new AtomicInteger();
+		final int numOfColumnsInA = a[0].length;
+		class Work implements Runnable {
+			int[] columns;
+			int[][] a;
+			int[][] b;
+			AtomicInteger[][] c;
+			Work(int[] columns, int[][] a, int[][] b, AtomicInteger[][] c) {
+				this.columns = columns;
+				this.a = a;
+				this.b = b;
+				this.c = c;
+			}
+			@Override
+			public void run() {	
+				for(int i = 0; i < numOfRowsInA; i++)
+					for(int j = 0; j < numOfColumnsInB; j++) {
+						int r = 0;
+						for(int k: columns)
+							r += a[i][k] * b[k][j];		
+						c[i][j].addAndGet(r);
+					}
+			}	
+		}
+		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+        Work[] works = new Work[numOfWorks];
+		for (int i = 0; i < numOfWorks; i++) {
+			int workSize = numOfColumnsInA/numOfWorks;
+			int[] columns = new int[workSize];
+			for(int j = 0; j < workSize; j++)
+				columns[j] = i*workSize + j;
+			
+            works[i] = new Work(columns, a, b, c);
+            executor.execute(works[i]);
+         }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+        }
+        
+        int[][] ret = new int[numOfRowsInA][numOfColumnsInB];
+        for(int i = 0; i < numOfRowsInA; i++)
+        	for(int j = 0; j < numOfColumnsInB; j++)
+        		ret[i][j] = c[i][j].get();        	
+		return ret;
+	}
+
 	// we get don't get cache misses because we traverse B horizontally
 	// we can traverse like that because we are multiplying one element 
 	// in A with a whole row in B before continuing to the next row in B
-	public static int[][] parallelMultiply2(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
+	public static int[][] parallelMultiply21(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
 		MatrixUtility.sanityCheck1(a, b);
 		MatrixUtility.sanityCheck3(a, numOfWorks);
-		final int numOfRows = a.length;
-		final int numOfColumns = b[0].length;
-		int[][] c = new int[numOfRows][numOfColumns];
+		final int numOfRowsInA = a.length;
+		final int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
 		final int rowLengthOfA = a[0].length;
 		final int rowLengthOfB = b[0].length;
 		class Work implements Runnable {
@@ -135,7 +192,7 @@ public class UseMM_ThreadsAndLocks {
 		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
         Work[] works = new Work[numOfWorks];
 		for (int i = 0; i < numOfWorks; i++) {
-			int workSize = numOfRows/numOfWorks;
+			int workSize = numOfRowsInA/numOfWorks;
 			int[] rows = new int[workSize];
 			for(int j = 0; j < workSize; j++)
 				rows[j] = i*workSize + j;		
@@ -149,7 +206,7 @@ public class UseMM_ThreadsAndLocks {
 	}
 
 	// a multi-threaded solution which also has the benefit of cache hits
-	public static int[][] parallelMultiply3(int[][] a, int[][] b, int numOfThreads, int numOfWorks, int bs) {
+	public static int[][] parallelMultiply31(int[][] a, int[][] b, int numOfThreads, int numOfWorks, int bs) {
 		MatrixUtility.sanityCheck1(a, b);
 		MatrixUtility.sanityCheck2(a, b, bs);
 		MatrixUtility.sanityCheck3(a, numOfWorks);
@@ -203,18 +260,23 @@ public class UseMM_ThreadsAndLocks {
 		
 		int[][] a = MatrixUtility.generateMatrix(100, 128); 
 		int[][] b = MatrixUtility.generateMatrix(128, 512); 
-		int[][] c1 = sequentialMultiply1(a, b);
-		int[][] c2 = sequentialMultiply2(a, b);
-		int[][] c3 = sequentialMultiply3(a, b, 16);
-		int[][] c4 = parallelMultiply1(a, b, 4, 4);
-		int[][] c5 = parallelMultiply2(a, b, 4, 4);
-		int[][] c6 = parallelMultiply3(a, b, 4, 4, 16);
 		
-		System.out.println(MatrixUtility.matrixEqual(c1, c2));
-		System.out.println(MatrixUtility.matrixEqual(c1, c3));
-		System.out.println(MatrixUtility.matrixEqual(c1, c4));
-		System.out.println(MatrixUtility.matrixEqual(c1, c5));
-		System.out.println(MatrixUtility.matrixEqual(c1, c6));
+		int[][] c10 = sequentialMultiply10(a, b);
+		int[][] c11 = parallelMultiply11(a, b, 4, 4);
+		int[][] c12 = parallelMultiply12(a, b, 4, 4);		
+		System.out.println(MatrixUtility.matrixEqual(c10, c11));
+		System.out.println(MatrixUtility.matrixEqual(c10, c12));
+		
+		int[][] c20 = sequentialMultiply20(a, b);
+		int[][] c21 = parallelMultiply21(a, b, 4, 4);
+		System.out.println(MatrixUtility.matrixEqual(c10, c20));
+		System.out.println(MatrixUtility.matrixEqual(c10, c21));
+		
+		int[][] c30 = sequentialMultiply30(a, b, 16);		
+		int[][] c31 = parallelMultiply31(a, b, 4, 4, 16);
+		System.out.println(MatrixUtility.matrixEqual(c10, c30));
+		System.out.println(MatrixUtility.matrixEqual(c10, c31));
+		
 //		System.out.println(MatrixUtility.matrixToString(a));
 //		System.out.println(MatrixUtility.matrixToString(b));
 //		System.out.println(MatrixUtility.matrixToString(c1));
