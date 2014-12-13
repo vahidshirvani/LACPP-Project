@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,7 +36,7 @@ public class UseMM_ThreadsAndLocks {
 				for (int i = 0; i < numOfRowsInA; i = i+1)
 					for (int j = jj; j < Math.min(jj+blockSize,rowLengthOfB); j = j+1) {
 						int r = 0;
-						for (int k = kk; k < Math.min(kk+blockSize,numOfRowsInA); k = k+1)
+						for (int k = kk; k < Math.min(kk+blockSize,rowLengthOfA); k = k+1)
 							r = r + a[i][k]*b[k][j];
 						c[i][j] = c[i][j] + r;
 					}
@@ -49,16 +47,17 @@ public class UseMM_ThreadsAndLocks {
 	// we get cache misses when we traverse B vertically
 	public static int[][] parallelMultiply1(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
 		MatrixUtility.sanityCheck1(a, b);
+		MatrixUtility.sanityCheck3(a, numOfWorks);
 		final int numOfRows = a.length;
 		final int numOfColumns = b[0].length;
 		int[][] c = new int[numOfRows][numOfColumns];
 		final int rowLengthOfA = a[0].length;
 		class Work implements Runnable {
-			List<Integer> rows;
+			int[] rows;
 			int[][] a;
 			int[][] b;
 			int[][] c;
-			Work(List<Integer> rows, int[][] a, int[][] b, int[][] c) {
+			Work(int[] rows, int[][] a, int[][] b, int[][] c) {
 				this.rows = rows;
 				this.a = a;
 				this.b = b;
@@ -75,13 +74,10 @@ public class UseMM_ThreadsAndLocks {
 		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
         Work[] works = new Work[numOfWorks];
 		for (int i = 0; i < numOfWorks; i++) {
-			int workSize = (numOfRows/numOfWorks) + 1;
-			List<Integer> rows = new ArrayList<Integer>();
-			for(int j = 0; j < workSize; j++) {
-				int rowNumber = i*workSize + j;
-				if(rowNumber < numOfRows)
-					rows.add(rowNumber);
-			}
+			int workSize = numOfRows/numOfWorks;
+			int[] rows = new int[workSize];
+			for(int j = 0; j < workSize; j++)
+				rows[j] = i*workSize + j;
 			
             works[i] = new Work(rows, a, b, c);
             executor.execute(works[i]);
@@ -97,17 +93,18 @@ public class UseMM_ThreadsAndLocks {
 	// in A with a whole row in B before continuing to the next row in B
 	public static int[][] parallelMultiply2(int[][] a, int[][] b, int numOfThreads, int numOfWorks) {
 		MatrixUtility.sanityCheck1(a, b);
+		MatrixUtility.sanityCheck3(a, numOfWorks);
 		final int numOfRows = a.length;
 		final int numOfColumns = b[0].length;
 		int[][] c = new int[numOfRows][numOfColumns];
 		final int rowLengthOfA = a[0].length;
 		final int rowLengthOfB = b[0].length;
 		class Work implements Runnable {
-			List<Integer> rows;
+			int[] rows;
 			int[][] a;
 			int[][] b;
 			int[][] c;
-			Work(List<Integer> rows, int[][] a, int[][] b, int[][] c) {
+			Work(int[] rows, int[][] a, int[][] b, int[][] c) {
 				this.rows = rows;
 				this.a = a;
 				this.b = b;
@@ -124,13 +121,61 @@ public class UseMM_ThreadsAndLocks {
 		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
         Work[] works = new Work[numOfWorks];
 		for (int i = 0; i < numOfWorks; i++) {
-			int workSize = (numOfRows/numOfWorks) + 1;
-			List<Integer> rows = new ArrayList<Integer>();
-			for(int j = 0; j < workSize; j++) {
-				int rowNumber = i*workSize + j;
-				if(rowNumber < numOfRows)
-					rows.add(rowNumber);				
-			}			
+			int workSize = numOfRows/numOfWorks;
+			int[] rows = new int[workSize];
+			for(int j = 0; j < workSize; j++)
+				rows[j] = i*workSize + j;		
+            works[i] = new Work(rows, a, b, c);
+            executor.execute(works[i]);
+         }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+        }
+		return c;
+	}
+
+	// a multi-threaded solution which also has the benefit of cache hits
+	public static int[][] parallelMultiply3(int[][] a, int[][] b, int numOfThreads, int numOfWorks, int bs) {
+		MatrixUtility.sanityCheck1(a, b);
+		MatrixUtility.sanityCheck2(a, b, bs);
+		MatrixUtility.sanityCheck3(a, numOfWorks);
+		final int numOfRowsInA = a.length;
+		final int numOfColumnsInB = b[0].length;
+		int[][] c = new int[numOfRowsInA][numOfColumnsInB];
+		final int rowLengthOfA = a[0].length;
+		final int rowLengthOfB = b[0].length;
+		final int blockSize = bs;
+		class Work implements Runnable {
+			int[] rows;
+			int[][] a;
+			int[][] b;
+			int[][] c;
+			Work(int[] rows, int[][] a, int[][] b, int[][] c) {
+				this.rows = rows;
+				this.a = a;
+				this.b = b;
+				this.c = c;
+			}
+			@Override
+			public void run() {		
+				for(int jj = 0; jj < rowLengthOfB; jj = jj+blockSize)
+					for (int kk = 0; kk < rowLengthOfA; kk = kk+blockSize)
+						for(int i: rows)
+							for (int j = jj; j < Math.min(jj+blockSize,rowLengthOfB); j = j+1) {
+								int r = 0;
+								for (int k = kk; k < Math.min(kk+blockSize,rowLengthOfA); k = k+1)
+									r = r + a[i][k]*b[k][j];
+								c[i][j] = c[i][j] + r;
+							}				
+			}	
+		}
+		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+        Work[] works = new Work[numOfWorks];
+		for (int i = 0; i < numOfWorks; i++) {
+			int workSize = numOfRowsInA/numOfWorks;
+			int[] rows = new int[workSize];
+			for(int j = 0; j < workSize; j++)
+				rows[j] = i*workSize + j;		
             works[i] = new Work(rows, a, b, c);
             executor.execute(works[i]);
          }
@@ -142,20 +187,21 @@ public class UseMM_ThreadsAndLocks {
 	
 	public static void main(String[] args) {
 		
-		int[][] a = MatrixUtility.generateMatrix(256, 128); 
+		int[][] a = MatrixUtility.generateMatrix(100, 128); 
 		int[][] b = MatrixUtility.generateMatrix(128, 512); 
 		int[][] c1 = sequentialMultiply1(a, b);
 		int[][] c2 = sequentialMultiply2(a, b, 16);
 		int[][] c3 = parallelMultiply1(a, b, 4, 4);
 		int[][] c4 = parallelMultiply2(a, b, 4, 4);
+		int[][] c5 = parallelMultiply3(a, b, 4, 4, 16);
 		
 		System.out.println(MatrixUtility.matrixEqual(c1, c2));
 		System.out.println(MatrixUtility.matrixEqual(c1, c3));
 		System.out.println(MatrixUtility.matrixEqual(c1, c4));
+		System.out.println(MatrixUtility.matrixEqual(c1, c5));
 //		System.out.println(MatrixUtility.matrixToString(a));
 //		System.out.println(MatrixUtility.matrixToString(b));
 //		System.out.println(MatrixUtility.matrixToString(c1));
-//		System.out.println(MatrixUtility.matrixToString(c2));
 	}
 
 }

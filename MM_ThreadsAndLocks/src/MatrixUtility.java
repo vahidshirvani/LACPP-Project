@@ -45,6 +45,16 @@ public class MatrixUtility {
 		return isValid;
 	}
 	
+	public static boolean sanityCheck3(int[][] a, int numOfWorks) {
+		boolean isValid = true;
+		int numOfRowsInA = a.length;
+		if((numOfRowsInA % numOfWorks) != 0) {
+			System.out.println("could not divide into work");
+			System.exit(1);
+		}
+		return isValid;
+	}
+	
 	public static boolean matrixEqual(int[][] a, int[][] b) {
 		boolean isEqual = true;
 		int numOfRowsInA = a.length; 
