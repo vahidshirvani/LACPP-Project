@@ -1,7 +1,8 @@
-import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.RecursiveAction;
 
 
-public class Multiply extends RecursiveTask<Integer>  {
+
+public class Multiply extends RecursiveAction{
 	//static final int SEQUENTIAL_THRESHOLD = 100;
 	Matrix a;
 	Matrix b;
@@ -32,7 +33,7 @@ public class Multiply extends RecursiveTask<Integer>  {
 	}
 	public void doWorkload(){
 		for(int x = 0;x<workload;x++){
-			c.addElement(j,i,multiply(a.getRow(i),b.getColumn(i)));
+			c.addElement(i,j,multiply(a.getRow(i),b.getColumn(j)));
 			if(j != (c.columns-1)) {
 				j = j + 1;
 			} else if (j == (c.columns-1)) {
@@ -46,33 +47,50 @@ public class Multiply extends RecursiveTask<Integer>  {
 	
 	public int calcNewi(){
 		int tmp;
+		if(workload < c.columns&&(j+workload)>c.columns) {
+			tmp = i+1;
+			
+		} else {
 		tmp = i + (workload/c.rows);
-		return tmp;
+		}
+		return tmp;	
 	}
 	public int calcNewj(){
 		int tmp;
-		tmp = j + (workload % c.columns);
+		if(workload < c.columns){
+			tmp =(j + workload) % c.columns;
+		} else {
+			
+			tmp =(workload%c.columns);
+			
+		}
 		return tmp;
 
 	}
-	
+
 	@Override
-	protected Integer compute() {
+	protected void compute() {
 		if((size)-(i*c.columns + j) <= workload){
-			this.workload = (size)-(i*c.rows + j); 
+			this.workload = (size)-(i*c.columns + j); 
 			doWorkload();
-		} else if(i*c.columns + j >= (size-1)){
+			/*} else if(i*c.columns + j >= (size-1)){
 			this.workload = (size)-(i*c.rows + j); 
-			doWorkload();
+			doWorkload();*/
 		}else {
-			Multiply task = new Multiply(a,b,c,calcNewi(),calcNewj(),workload,size);
-			task.fork();
-			doWorkload();
-			task.join();
-			
+			int newi = calcNewi();
+			int newj = calcNewj();
+			if(newi * c.columns +  newj >= size-1){
+				this.workload = (size) - (i*c.columns+j);
+				doWorkload();
+			} else {
+				Multiply task = new Multiply(a,b,c,newi,newj,workload,size);
+				task.fork();
+				doWorkload();
+				task.join();
+			}
+
 		}
-		return 0;
-		
+
 	}
 
 }
