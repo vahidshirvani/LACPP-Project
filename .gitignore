@@ -9,6 +9,7 @@
 MM_MapReduce/.project
 .metadata
 .recommenders
+.DS_Store
 bin/**
 tmp/**
 tmp/**/*
