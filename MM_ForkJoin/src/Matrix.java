@@ -22,6 +22,8 @@ public class Matrix {
 			}
 		}*/
 	}
+	
+
 	public Matrix(int rows,int columns,String filename) {
 		this.rowMatrix = new int[rows][columns];
 		this.columnMatrix = new int[columns][rows];
@@ -78,6 +80,16 @@ public class Matrix {
 		}
 		
 	}
+	
+	public void generateMatrix() {
+
+		for(int i = 0; i < rows; i++)
+			for(int j = 0; j < columns; j++)
+				//rowMatrix[i][j] = (int) (Math.random() * 10);
+				rowMatrix[i][j] = 1;	
+				transpose();
+	}
+	
 	void printCMatrix() {
 		for(int i = 0;i<columns;i++){
 			for(int j = 0;j<rows;j++) {

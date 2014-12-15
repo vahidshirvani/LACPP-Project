@@ -1,13 +1,13 @@
 import java.util.concurrent.RecursiveTask;
 
-public class BlockStriped extends RecursiveTask <Integer> {
+public class BlockStripedC extends RecursiveTask <Integer> {
 		Matrix a;
 		Matrix b;
 		Matrix c;
 		int i;
 		
 		
-	public BlockStriped(Matrix a,Matrix b,Matrix c,int i){
+	public BlockStripedC(Matrix a,Matrix b,Matrix c,int i){
 		this.a = a;
 		this.b = b;
 		this.c = c;
@@ -34,7 +34,7 @@ public class BlockStriped extends RecursiveTask <Integer> {
 		if(i == c.rows-1){
 			doWork();
 		} else {
-			BlockStriped task = new BlockStriped(a,b,c,i+1);
+			BlockStripedC task = new BlockStripedC(a,b,c,i+1);
 			task.fork();
 			doWork();
 			task.join();

@@ -1,29 +1,25 @@
 import java.util.concurrent.ForkJoinPool;
-import java.util.Arrays;
+
 
 public class use_MM_ForkJoin {
-	public static void doBlockStriped(){
-		ForkJoinPool fjPool = new ForkJoinPool();
-		Matrix a,b,c;
-		a = new Matrix(5,5,"/Users/Eddie1/Programmering/lacpp/LACPP-Project/MM_ForkJoin/src/test.txt");
-		b = new Matrix(5,5,"/Users/Eddie1/Programmering/lacpp/LACPP-Project/MM_ForkJoin/src/test2.txt");
-		c = new Matrix(a.rows,b.columns);
 
-		fjPool.invoke(new Multiply(a,b,c,0,0,5,(c.rows*c.columns)));
-		c.printMatrix();
-		
-	}
-	public static void doBlockStriped2 (){
-		Matrix a,b,c;
-		a = new Matrix(5,5,"/Users/Eddie1/Programmering/lacpp/LACPP-Project/MM_ForkJoin/src/test.txt");
-		b = new Matrix(5,5,"/Users/Eddie1/Programmering/lacpp/LACPP-Project/MM_ForkJoin/src/test2.txt");
-		c = new Matrix(a.rows,b.columns);
-		ForkJoinPool fjPool = new ForkJoinPool();
-		fjPool.invoke(new BlockStriped(a,b,c,0));
-		c.printMatrix();
-	}
 	public static void main(String[] args) {
-		//doBlockStriped();
-		doBlockStriped2();
+		int size = 100000;
+		int[] array = new int[size];
+		for(int i = 0; i < size; i++)
+			array[i] = (int) (Math.random()*100); 
+		
+		ForkJoinPool fjPool = new ForkJoinPool();
+		int sum = fjPool.invoke(new Sum(array,0,array.length));
+		System.out.println("The sum is " + sum);
+		
+		Matrix a =new Matrix(10,10);
+		a.generateMatrix();
+		Matrix b =new Matrix(10,10);
+		b.generateMatrix();
+		Matrix c =new Matrix(10,10);
+		
+		fjPool.invoke(new Multiply(a,b,c));
+		c.printMatrix();
 	}
 }
