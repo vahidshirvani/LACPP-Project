@@ -1,5 +1,4 @@
 import java.util.concurrent.ForkJoinPool;
-import java.util.Arrays;
 
 public class use_MM_ForkJoin {
 
